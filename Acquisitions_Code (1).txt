@@ -1,0 +1,64 @@
+import xml.etree.ElementTree as ET
+import pandas as pd
+import xlsxwriter
+import re
+n=1
+m=1
+
+count=0
+workbook = xlsxwriter.Workbook('Acquisitions_Title.xlsx')
+
+worksheet = workbook.add_worksheet()
+
+data = []
+filename = []
+Company = []
+Title = []
+
+
+worksheet.write(0, 0, 'FILE')
+worksheet.write(0, 1, 'TITLE')
+worksheet.write(0, 2, 'COMPANY')
+
+
+count=0
+c=0
+path = '/Users/prernabajaj/Press Release Data/xml_data/'
+while(n<=10038):
+    tree = ET.parse(path+"file"+str(n)+".xml") #"file"+str(n)+".xml"
+    n+=1
+    root = tree.getroot()
+    body = root.find("{http://iptc.org/std/NITF/2006-10-18/}body")
+    head = body.find("{http://iptc.org/std/NITF/2006-10-18/}body.head")
+    hedline = head.find("{http://iptc.org/std/NITF/2006-10-18/}hedline")
+    meta = root.find("metadata")
+    Title = hedline[0].text
+
+  
+    search_word = ['acquires','acquisition','acquire']
+    if any(word in Title for word in search_word):
+    #if(search_word in Title):
+        count+=1
+        filename="\nFILE"+ str(n-1)
+        print("\nFILE"+ str(n-1))
+        
+        for element in meta.findall("classificationGroup"):
+            if(element.attrib["classificationScheme"] == "indexing-terms"):
+        
+                for element1 in element.findall("classification"):
+            
+                    if(element1.attrib["classificationScheme"] == "company"):
+                        for element2 in element1.findall("classificationItem"):
+                            
+                            for element3 in element2.findall("className"):
+                                Company = element3.text
+                                
+                                data = [filename,Title,Company]
+                                for col_num, data in enumerate(data):
+                                    worksheet.write(m, col_num, data)
+                                m+=1
+                                
+                    
+                    
+print("\nCount:" + str(count))
+workbook.close()
