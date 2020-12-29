@@ -1,0 +1,15 @@
+f = open("all120.txt", "r")
+n = 9962
+l = f.readline()
+path = '/Users/prernabajaj/Press Release Data/xml_data/'
+while(l != ""):
+    if(l[:5] == "<?xml"):
+        n+=1
+        if(n>9963):
+        	f1 = open(path+"file"+str(n-1)+".xml", "w+")
+        	f1.write(l)
+        	f1.close 
+    l = f.readline()
+    
+
+

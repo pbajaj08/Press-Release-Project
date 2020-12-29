@@ -1,0 +1,68 @@
+import xml.etree.ElementTree as ET
+import pandas as pd
+import xlsxwriter
+m=1
+n=1
+count=0
+workbook = xlsxwriter.Workbook('Tech_Subject.xlsx')
+worksheet = workbook.add_worksheet()
+data = []
+filename = []
+Subject = []
+Company = []
+Title = []
+List = ['PRODUCT DEVELOPMENT','INTERNET SOCIAL NETWORKING','PRODUCT INNOVATION','PRODUCT MANAGEMENT','PROJECT MANAGEMENT','SOCIAL MEDIA','WEBSITES','COMPUTER SOFTWARE','ELECTRONIC COMMERCE','INTERNET & WWW','COMPUTER NETWORKS','PRODUCT REVIEWS','INFORMATION SECURITY & PRIVACY','INTERNET RETAILING','STREAMING MEDIA','INTERNET OF THINGS','COMPUTING & INFORMATION TECHNOLOGY','SOCIAL NETWORKING','ONLINE MARKETING & ADVERTISING','GAMIFICATION','SMARTPHONES','MOBILE DEVICES','TECHNOLOGY TRANSFER','NANOTECHNOLOGY','INTERNET BROADCASTING','CONSUMER ELECTRONICS','COMPUTER PROGRAMMING','MOBILE APPLICATIONS','COMPUTER NETWORK SECURITY','CLOUD COMPUTING','PRODUCT TRENDS','COMPUTER ENGINEERING','SOFTWARE MAKERS','SOFTWARE DEVELOPMENT & ENGINEERING','SMART CARDS','B2B ELECTRONIC COMMERCE','CUSTOMER RELATIONSHIP MANAGEMENT','NETWORK SOFTWARE','INTERNET AUCTIONS','DATA SECURITY','COMPUTING & IT SECTOR PERFORMANCE','SOFTWARE AS A SERVICE','COMPUTER OPERATING SYSTEMS','AUTONOMOUS MOTOR VEHICLES','TECHNOLOGY TRENDS','INTERNET VIDEO','ELECTRONIC MAIL','COMPUTER SCIENCE','C++ PROGRAMMING','BIG DATA','WEARABLE TECHNOLOGY','INTERNET BANKING','COMPUTER TRADING SYSTEMS','COMPUTER & INTERNET LAW','TECHNOLOGY EXPORTS & IMPORTS','TECHNOLOGY MATURITY','ELECTRONIC BOOKS','ELECTRONIC FUNDS TRANSFER','CHATBOTS','COMPUTER GRAPHICS','COMPUTER PERIPHERALS','PROGRAMMING LANGUAGE & TOOLS','WEB DEVELOPMENT','PLATFORM AS A SERVICE','LAPTOP COMPUTERS','INTERNET BROWSERS','INTERNET JOURNALISM','DATA ANALYTICS','ELECTRONIC TICKETS','ELECTRONIC DATA INTERCHANGE','COMPUTER & ELECTRONIC MFG','COMPUTER DISPLAY TECHNOLOGY','COMPUTER SIMULATION']
+worksheet.write(0, 0, 'SUBJECT')
+worksheet.write(0, 1, 'FILE')
+worksheet.write(0, 2, 'TITLE')
+worksheet.write(0, 3, 'COMPANY')
+path = '/Users/prernabajaj/Press Release Data/xml_data/'
+while(n<=10038):
+    tree = ET.parse(path+"file"+str(n)+".xml") #"file"+str(n)+".xml"
+    n+=1
+    root = tree.getroot()
+    body = root.find("{http://iptc.org/std/NITF/2006-10-18/}body")
+    head = body.find("{http://iptc.org/std/NITF/2006-10-18/}body.head")
+    hedline = head.find("{http://iptc.org/std/NITF/2006-10-18/}hedline")
+    meta = root.find("metadata")
+
+    for element in meta.findall("classificationGroup"):
+            if(element.attrib["classificationScheme"] == "indexing-terms"):
+                Subject = []
+                Company = []
+                for element1 in element.findall("classification"):
+                    
+                    if(element1.attrib["classificationScheme"] == "subject"):
+                        
+                        for element2 in element1.findall("classificationItem"):
+                            if(element2[1].text in List):
+                                count+=1
+                                for element2 in element1.findall("classificationItem"): 
+                                    Subject.append(element2[1].text)
+                                break
+                    if(element1.attrib["classificationScheme"] == "company"):
+                    
+                        for element2 in element1.findall("classificationItem"):
+                            for element3 in element2.findall("className"):
+                                Company.append(element3.text)
+                            
+            
+                
+                if(Subject != []):
+                    Title = hedline[0].text
+                    filename="\nFILE"+ str(n-1)
+                    for i in range(max(len(Subject),len(Company))):
+                        sub = ""
+                        com = ""
+                        if(i<len(Subject)):
+                            sub = Subject[i]
+                        if(i<len(Company)):
+                            com = Company[i]
+                        data = [sub,filename,Title,com]
+                        for col_num, data in enumerate(data):
+                            worksheet.write(m, col_num, data)
+                        m+=1
+                                
+                                
+print("\nCount:" + str(count))
+workbook.close()

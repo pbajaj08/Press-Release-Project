@@ -1,0 +1,94 @@
+import xml.etree.ElementTree as ET
+import pandas as pd
+import xlsxwriter
+n=1
+m=1
+
+count=0
+workbook = xlsxwriter.Workbook('IndustryData.xlsx')
+
+worksheet = workbook.add_worksheet()
+
+data = []
+filename = []
+Industry = []
+Title = []
+Code = []
+Name = []
+#Score = []
+worksheet.write(0, 0, 'Code')
+worksheet.write(0, 1, 'INDUSTRY')
+worksheet.write(0, 2, 'FILE')
+worksheet.write(0, 3, 'TITLE')
+
+
+path = '/Users/prernabajaj/Press Release Data/xml_data/'
+while(n<=10038):
+    tree = ET.parse(path+"file"+str(n)+".xml") #"file"+str(n)+".xml"
+    n+=1
+    root = tree.getroot()
+    body = root.find("{http://iptc.org/std/NITF/2006-10-18/}body")
+    head = body.find("{http://iptc.org/std/NITF/2006-10-18/}body.head")
+    hedline = head.find("{http://iptc.org/std/NITF/2006-10-18/}hedline")
+    meta = root.find("metadata")
+
+    for element in meta.findall("classificationGroup"):
+            if(element.attrib["classificationScheme"] == "indexing-terms"):
+        
+                for element1 in element.findall("classification"):
+            
+                    if(element1.attrib["classificationScheme"] == "industry"):
+                        count+=1
+                        #print("\nFILE"+ str(n-1))
+                        filename="\nFILE"+ str(n-1)
+                        Title = hedline[0].text
+                        for element2 in element1.findall("classificationItem"):
+                            #found = 1
+                            Code = []
+                            for element3 in element2.findall("classCode"):
+                                if(element3.text is None):
+                                    #found = 0
+                                    continue
+                                Code.append(element3.text)
+                                
+                                #for child in element3:
+                                    
+                                    #print(child.tag)
+                                print("\nFILE"+ str(n-1))
+                                print("Code:" + element3.text)
+                                
+                            for i,element3 in enumerate(element2.findall("className")):
+                                        #print(type(element3.text))
+                                        if(element3.text is None):
+                                            continue
+                                        if(element3.text[:4] == 'NAIC' or element3.text[:3] == 'SIC'):
+                                            ind = 0
+                                            while(element3.text[ind]!=" "):
+                                                ind+=1
+                                            Code = element3.text[:ind]
+                                            Industry = element3.text[ind+1:]
+                                            #Score= element3.attrib["score"]
+                                            #print("Industry:" + element3.text)
+                                            #print("\nFILE"+ str(n-1))
+                                            #print("Company:" + element1[0][1].text)
+                                            #print("Title:"+ hedline[0].text)
+                                            data = [Code,Industry,filename,Title]
+                                            for col_num, data in enumerate(data):
+                                                worksheet.write(m, col_num, data)
+                                            m+=1 
+                                            
+                                        else:
+                                            Industry = element3.text
+                                            data = [Code[i],Industry,filename,Title]
+                                            for col_num, data in enumerate(data):
+                                                worksheet.write(m, col_num, data)
+                                            m+=1 
+                                
+                                
+                                
+                            
+                                    
+                                        
+                        
+print("\nCount:" + str(count))
+workbook.close()

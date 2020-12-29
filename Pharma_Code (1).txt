@@ -1,0 +1,113 @@
+import xml.etree.ElementTree as ET
+import pandas as pd
+import xlsxwriter
+m=1
+n=1
+count=0
+workbook = xlsxwriter.Workbook('Pharma_Subject.xlsx')
+worksheet = workbook.add_worksheet()
+data = []
+filename = []
+Subject = []
+Company = []
+Title = []
+Industry = []
+Code = []
+
+List = ['PRICES','DISEASES & DISORDERS','CANCER','ONCOLOGY','MEDICAL TREATMENTS & PROCEDURES','MEDICAL RESEARCH','DRUG DESIGN & DISCOVERY','PATENTS','RESEARCH INSTITUTES','BIOTECHNOLOGY & GENETIC SCIENCE','CLINICAL TRIALS','MANUFACTURING OUTPUT','CANCER DRUGS','CHEMOTHERAPY & RADIATION','DIABETES','SURGERY & TRANSPLANTATION','IMMUNE SYSTEM DISORDERS','AUTOIMMUNE DISORDERS','NEUROLOGICAL DISORDERS & INJURIES','DRUG & MEDICAL DEVICES APPROVAL','DRUG SAFETY','PHARMACEUTICALS INDUSTRY','DISEASE MARKERS','UROGENITAL DISORDERS & INJURIES','PRICE INCREASES','INFECTIOUS DISEASE','CHRONIC DISEASES','BREAST CANCER','VACCINES','ENDOCRINE SYSTEM DISORDERS','DRUG INTERACTIONS & SIDE EFFECTS','US FDA APPROVALS','BLOOD DISORDERS','US FDA REVIEW','WOUNDS & INJURIES','LYMPHOMA','PREVENTION & WELLNESS','PRICE CHANGES','PHARMACEUTICALS SECTOR PERFORMANCE','HEALTH CARE POLICY','HEALTH CARE COSTS','INTERNAL MEDICINE','REGULATORY COMPLIANCE','PREGNANCY & CHILDBIRTH','DIETITIANS & NUTRITIONISTS','DERMATOLOGY','ENZYME INHIBITORS','TYPE 2 DIABETES','HEART DISEASE','PROSTATE DISEASE','PHARMACOLOGY','MUSCULOSKELETAL DISORDERS & INJURIES','PHARMACEUTICAL PREPARATION MFG','KIDNEY DISEASE','RESPIRATORY DISEASE','PRODUCT SAFETY','GENETIC DISEASES','SKIN CANCER','EPILEPSY','BIOMEDICINE','DRUG EFFICACY','LIVER DISEASE','LEUKEMIA','VIRUSES','NEW ORDERS','PRODUCT PROMOTION','PHARMACEUTICALS PATENTS','GASTROINTESTINAL CANCER','HOSPITALS','PARKINSONS DISEASE','GASTROINTESTINAL DISORDERS','DRUG DELIVERY SYSTEMS','BRAIN CANCER','ALLERGIES','ASTHMA','PROTEIN BASED DRUGS','PRESCRIPTION DRUGS','CANNABIS','PRODUCT PRICING','RHEUMATIC DISEASES','PHARMACOGENOMICS','CHRONIC OBSTRUCTIVE PULMONARY DISEASE','PRICE MANAGEMENT','KNEE DISORDERS & INJURIES','MALARIA','PHARMACEUTICALS & BIOTECHNOLOGY REGULATORY COMPLIANCE','EYE DISORDERS AND INJURIES','IMPORT PRICES','HEPATITIS C','ANEMIA','SCHIZOPHRENIA','PRICE CUTTING','ADVERSE DRUG EVENT REPORTING','BLADDER CANCER','VACCINATION & IMMUNIZATION','PHARMACIES','PERIODONTAL DISEASES','PHARMACEUTICAL CHEMISTRY','KIDNEY CANCER','NUTRITIONAL PHARMACEUTICALS','EPIDEMICS','GENE BASED DRUG DISCOVERY','PHARMACEUTICALS & BIOTECHNOLOGY REGULATION & POLICY','PHARMACIES & DRUG STORES','CENTRAL NERVOUS SYSTEM DRUGS','CARDIOVASCULAR DRUGS','CHEMICAL MFG','CERVICAL CANCER','OBESITY RELATED DISEASES','GENE BASED DRUGS','GENERIC DRUGS','VETERINARY DRUGS','PERSONAL CARE & PHARMACEUTICALS PACKAGING','PHARMACEUTICAL DRUG & DEVICES LITIGATION','MOSQUITO BORNE DISEASES','INFLUENZA','ILLEGAL DRUGS','DRUG LIBERALIZATION','WEIGHT LOSS DRUGS','PRESCRIPTION DRUG POLICY','PHARAMCEUTICALS ASSOCIATIONS','COMPOUNDING PHARMACIES']
+worksheet.write(0, 0, 'SUBJECT')
+worksheet.write(0, 1, 'FILE')
+worksheet.write(0, 2, 'TITLE')
+worksheet.write(0, 3, 'COMPANY')
+worksheet.write(0, 4, 'CODE')
+worksheet.write(0, 5, 'INDUSTRY')
+path = '/Users/prernabajaj/Press Release Data/xml_data/'
+while(n<=10038):
+    tree = ET.parse(path+"file"+str(n)+".xml") #"file"+str(n)+".xml"
+    n+=1
+    root = tree.getroot()
+    body = root.find("{http://iptc.org/std/NITF/2006-10-18/}body")
+    head = body.find("{http://iptc.org/std/NITF/2006-10-18/}body.head")
+    hedline = head.find("{http://iptc.org/std/NITF/2006-10-18/}hedline")
+    meta = root.find("metadata")
+
+    for element in meta.findall("classificationGroup"):
+            if(element.attrib["classificationScheme"] == "indexing-terms"):
+                Subject = []
+                Company = []
+                Industry = []
+                Code = []
+                for element1 in element.findall("classification"):
+                    
+                    if(element1.attrib["classificationScheme"] == "subject"):
+                        
+                        for element2 in element1.findall("classificationItem"):
+                            if(element2[1].text in List):
+                                count+=1
+                                for element2 in element1.findall("classificationItem"):
+                                    #if(element2[1].text != 'AGREEMENTS'):
+                                    Subject.append(element2[1].text)
+                                break
+                    if(element1.attrib["classificationScheme"] == "company"):
+                        
+                       
+                        for element2 in element1.findall("classificationItem"):
+                            for element3 in element2.findall("className"):
+                                Company.append(element3.text)
+                                
+                    if(element1.attrib["classificationScheme"] == "industry"):
+                        
+                        filename="\nFILE"+ str(n-1)
+                        Title = hedline[0].text
+                        for element2 in element1.findall("classificationItem"):
+                            
+                            for element3 in element2.findall("classCode"):
+                                if(element3.text is None):
+                                    
+                                    continue
+                                Code.append(element3.text)
+                                
+                                
+                            for i,element3 in enumerate(element2.findall("className")):
+                                        
+                                        if(element3.text is None):
+                                            continue
+                                        if(element3.text[:4] == 'NAIC' or element3.text[:3] == 'SIC'):
+                                            ind = 0
+                                            while(element3.text[ind]!=" "):
+                                                ind+=1
+                                            Code.append(element3.text[:ind])
+                                            Industry.append(element3.text[ind+1:])
+                                             
+                                            
+                                        else:
+                                            Industry.append(element3.text)
+                                            
+                            
+            
+                
+                if(Subject != []):
+                    Title = hedline[0].text
+                    filename="\nFILE"+ str(n-1)
+                    for i in range(max(len(Subject),len(Company),len(Industry),len(Code))):
+                        sub = ""
+                        com = ""
+                        ind = ""
+                        cod = ""
+                        if(i<len(Subject)):
+                            sub = Subject[i]
+                        if(i<len(Company)):
+                            com = Company[i]
+                        if(i<len(Industry)):
+                            ind = Industry[i]
+                        if(i<len(Code)):
+                            cod = Code[i]
+                        data = [sub,filename,Title,com,cod,ind]
+                        for col_num, data in enumerate(data):
+                            worksheet.write(m, col_num, data)
+                        m+=1
+                
+                                
+                                
+print("\nCount:" + str(count))
+workbook.close()
